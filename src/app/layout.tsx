@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: 'AttendEase',
+  title: 'PSG iTech',
   description: 'A streamlined student attendance management app.',
 };
 
