@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -50,46 +51,56 @@ export function LoginForm() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-4">
-      <Card className="w-full max-w-sm shadow-2xl">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-            <BookUser className="h-8 w-8 text-primary" />
-          </div>
-          <CardTitle className="text-3xl font-bold text-primary">PSG iTech</CardTitle>
-          <CardDescription>Sign in to manage your attendance</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="rollNumber">Roll Number</Label>
-              <Input
-                id="rollNumber"
-                type="text"
-                placeholder="e.g., 101"
-                value={rollNumber}
-                onChange={(e) => setRollNumber(e.target.value)}
-                required
-                disabled={isLoading}
-              />
+      <div className="w-full max-w-sm">
+        <Image 
+          src="https://placehold.co/600x400.png" 
+          alt="PSG iTech Campus" 
+          width={600} 
+          height={400} 
+          className="mb-8 rounded-lg shadow-2xl"
+          data-ai-hint="college campus"
+        />
+        <Card className="shadow-2xl">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+              <BookUser className="h-8 w-8 text-primary" />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input
-                id="name"
-                type="text"
-                placeholder="e.g., Jane Doe"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                disabled={isLoading}
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Signing In...' : 'Sign In'}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+            <CardTitle className="text-3xl font-bold text-primary">PSG iTech</CardTitle>
+            <CardDescription>Sign in to manage your attendance</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="rollNumber">Roll Number</Label>
+                <Input
+                  id="rollNumber"
+                  type="text"
+                  placeholder="e.g., 101"
+                  value={rollNumber}
+                  onChange={(e) => setRollNumber(e.target.value)}
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="name">Full Name</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder="e.g., Jane Doe"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? 'Signing In...' : 'Sign In'}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
