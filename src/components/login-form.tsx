@@ -9,14 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { BookUser } from 'lucide-react';
-
-// Mock student data
-const MOCK_STUDENTS = [
-  { name: 'Jane Doe', rollNumber: '101' },
-  { name: 'John Smith', rollNumber: '102' },
-  { name: 'Aparna', rollNumber: 'd25d135' },
-  { name: 'Roslin', rollNumber: 'd25d111' },
-];
+import { getStudent } from '@/services/firestore';
 
 export function LoginForm() {
   const router = useRouter();
@@ -25,17 +18,14 @@ export function LoginForm() {
   const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    const student = MOCK_STUDENTS.find(
-      (s) => s.rollNumber === rollNumber.trim() && s.name.toLowerCase() === name.trim().toLowerCase()
-    );
+    try {
+      const student = await getStudent(rollNumber.trim(), name.trim());
 
-    setTimeout(() => {
       if (student) {
-        // In a real app, you'd use a more secure session management system.
         localStorage.setItem('loggedInStudent', JSON.stringify(student));
         router.push('/dashboard');
       } else {
@@ -44,19 +34,27 @@ export function LoginForm() {
           title: 'Login Failed',
           description: 'Invalid roll number or name. Please try again.',
         });
-        setIsLoading(false);
       }
-    }, 1000); // Simulate network delay
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Login Error',
+        description: 'An error occurred during login. Please try again later.',
+      });
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-4">
       <div className="w-full max-w-sm">
-        <Image 
-          src="https://i.postimg.cc/131qH20H/psg-itech-logo.png" 
-          alt="PSG iTech Logo" 
-          width={400} 
-          height={400} 
+        <Image
+          src="https://i.postimg.cc/zLC4vQMW/psg-itech-logo.png"
+          alt="PSG iTech Logo"
+          width={400}
+          height={400}
           className="mx-auto mb-8 rounded-lg"
         />
         <Card className="shadow-2xl">

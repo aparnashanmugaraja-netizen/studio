@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Student, AttendanceRecord } from '@/lib/types';
 import { getAbsenceValidation } from '@/app/actions';
+import { getAttendanceRecords, addAttendanceRecord } from '@/services/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,24 +12,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-// Mock historical data for a student
-const MOCK_HISTORY: { [key: string]: AttendanceRecord[] } = {
-  '101': [
-    { date: new Date(Date.now() - 86400000 * 2).toLocaleDateString(), status: 'Present' },
-    {
-      date: new Date(Date.now() - 86400000).toLocaleDateString(),
-      status: 'Absent',
-      reason: 'Had a doctor appointment.',
-      validation: { isValid: true, explanation: "This is a valid reason for absence." },
-    },
-  ],
-  '102': [
-    { date: new Date(Date.now() - 86400000).toLocaleDateString(), status: 'Present' },
-  ],
-  'd25d135': [],
-  'd25d111': [],
-};
 
 export function AttendanceDashboard() {
   const router = useRouter();
@@ -40,6 +23,22 @@ export function AttendanceDashboard() {
   const [showAbsenceForm, setShowAbsenceForm] = useState(false);
   const [absenceReason, setAbsenceReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchAttendance = useCallback(async (studentId: string) => {
+    try {
+      const records = await getAttendanceRecords(studentId);
+      setAttendanceRecords(records);
+      const todayStr = new Date().toLocaleDateString();
+      if (records.some(rec => rec.date === todayStr)) {
+        setAttendanceMarked(true);
+      }
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch attendance history.' });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [toast]);
 
   useEffect(() => {
     const studentData = localStorage.getItem('loggedInStudent');
@@ -49,26 +48,31 @@ export function AttendanceDashboard() {
     }
     const parsedStudent = JSON.parse(studentData);
     setStudent(parsedStudent);
-    
-    const todayStr = new Date().toLocaleDateString();
-    setToday(todayStr);
-    
-    const studentHistory = MOCK_HISTORY[parsedStudent.rollNumber] || [];
-    setAttendanceRecords(studentHistory);
+    setToday(new Date().toLocaleDateString());
 
-    if (studentHistory.some(rec => rec.date === todayStr)) {
-      setAttendanceMarked(true);
+    if (parsedStudent.id) {
+      fetchAttendance(parsedStudent.id);
+    } else {
+        setIsLoading(false);
+        toast({variant: 'destructive', title: 'Error', description: 'Student ID not found.'})
     }
-  }, [router]);
+  }, [router, fetchAttendance, toast]);
 
-  const handleMarkPresent = () => {
+  const handleMarkPresent = async () => {
+    if (!student?.id) return;
     const newRecord: AttendanceRecord = { date: today, status: 'Present' };
-    setAttendanceRecords(prev => [newRecord, ...prev]);
-    setAttendanceMarked(true);
-    toast({
-      title: 'Attendance Marked',
-      description: 'You have been marked as Present for today.',
-    });
+    
+    try {
+        await addAttendanceRecord(student.id, { status: 'Present', date: new Date() });
+        setAttendanceRecords(prev => [newRecord, ...prev]);
+        setAttendanceMarked(true);
+        toast({
+          title: 'Attendance Marked',
+          description: 'You have been marked as Present for today.',
+        });
+    } catch(e) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Failed to mark attendance.' });
+    }
   };
 
   const handleMarkAbsent = () => {
@@ -77,33 +81,45 @@ export function AttendanceDashboard() {
 
   const handleSubmitAbsence = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!student?.id) return;
     if (!absenceReason.trim()) {
       toast({ variant: 'destructive', title: 'Error', description: 'Please provide a reason for your absence.' });
       return;
     }
     setIsSubmitting(true);
 
-    const validation = await getAbsenceValidation(absenceReason);
+    try {
+        const validation = await getAbsenceValidation(absenceReason);
+        const newRecord: AttendanceRecord = {
+          date: today,
+          status: 'Absent',
+          reason: absenceReason,
+          validation: validation,
+        };
 
-    const newRecord: AttendanceRecord = {
-      date: today,
-      status: 'Absent',
-      reason: absenceReason,
-      validation: validation,
-    };
+        await addAttendanceRecord(student.id, { 
+            status: 'Absent',
+            reason: absenceReason,
+            validation,
+            date: new Date() 
+        });
 
-    setAttendanceRecords(prev => [newRecord, ...prev]);
-    setAttendanceMarked(true);
-    setShowAbsenceForm(false);
-    setIsSubmitting(false);
-
-    toast({
-      title: 'Attendance Marked',
-      description: `You have been marked as Absent. Reason validation: ${validation.isValid ? 'Valid' : 'Suspicious'}.`,
-    });
+        setAttendanceRecords(prev => [newRecord, ...prev]);
+        setAttendanceMarked(true);
+        setShowAbsenceForm(false);
+        
+        toast({
+          title: 'Attendance Marked',
+          description: `You have been marked as Absent. Reason validation: ${validation.isValid ? 'Valid' : 'Suspicious'}.`,
+        });
+    } catch(e) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Failed to mark absence.' });
+    } finally {
+        setIsSubmitting(false);
+    }
   };
 
-  if (!student) {
+  if (isLoading || !student) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -186,8 +202,8 @@ export function AttendanceDashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {attendanceRecords.map((record) => (
-                    <TableRow key={record.date}>
+                  {attendanceRecords.map((record, index) => (
+                    <TableRow key={index}>
                       <TableCell>{record.date}</TableCell>
                       <TableCell>
                         <Badge variant={record.status === 'Present' ? 'default' : 'destructive'} className={record.status === 'Present' ? 'bg-primary/80' : ''}>{record.status}</Badge>
