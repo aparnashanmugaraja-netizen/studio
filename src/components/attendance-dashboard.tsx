@@ -26,6 +26,7 @@ const MOCK_HISTORY: { [key: string]: AttendanceRecord[] } = {
   '102': [
     { date: new Date(Date.now() - 86400000).toLocaleDateString(), status: 'Present' },
   ],
+  'd25d135': [],
 };
 
 export function AttendanceDashboard() {
