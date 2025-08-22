@@ -53,12 +53,11 @@ export function LoginForm() {
     <div className="flex min-h-screen flex-col items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <Image 
-          src="https://placehold.co/600x400.png" 
-          alt="PSG iTech Campus" 
-          width={600} 
+          src="https://storage.googleapis.com/project-ava-dev-user-assets/A22pZ6tDylYAAAAAUfBfG9xR.png" 
+          alt="PSG iTech Logo" 
+          width={400} 
           height={400} 
-          className="mb-8 rounded-lg shadow-2xl"
-          data-ai-hint="college campus"
+          className="mx-auto mb-8 rounded-lg"
         />
         <Card className="shadow-2xl">
           <CardHeader className="text-center">
