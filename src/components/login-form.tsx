@@ -53,7 +53,7 @@ export function LoginForm() {
     <div className="flex min-h-screen flex-col items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <Image 
-          src="https://storage.googleapis.com/project-ava-dev-user-assets/A22pZ6tDylYAAAAAUfBfG9xR.png" 
+          src="https://i.postimg.cc/8C5YfPLV/psg-itech-logo.png" 
           alt="PSG iTech Logo" 
           width={400} 
           height={400} 
