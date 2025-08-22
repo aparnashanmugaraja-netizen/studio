@@ -14,6 +14,7 @@ const MOCK_STUDENTS = [
   { name: 'Jane Doe', rollNumber: '101' },
   { name: 'John Smith', rollNumber: '102' },
   { name: 'Aparna', rollNumber: 'd25d135' },
+  { name: 'Roslin', rollNumber: 'd25d111' },
 ];
 
 export function LoginForm() {
